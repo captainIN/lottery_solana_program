@@ -65,7 +65,7 @@ pub mod lottery_program {
         Ok(())
     }
 
-    pub fn finalize_winner(ctx: Context<FinalizeWinner>) -> Result<()> {
+    pub fn finalize_winner(ctx: Context<FinalizeWinner>, offchain_random_index:u64) -> Result<()> {
         let program_state = &mut ctx.accounts.program_state;
         let lottery = &mut ctx.accounts.lottery;
         let user = &mut ctx.accounts.user;
@@ -75,12 +75,14 @@ pub mod lottery_program {
 
         let mut participant_list = Vec::new();
         for index in 0..lottery.participant_count {
-            let (expected_pda, bump) = Pubkey::find_program_address(&[b"participant", &lottery.index.to_be_bytes(), &index.to_be_bytes()], ctx.program_id);
+            let (expected_pda, _bump) = Pubkey::find_program_address(&[b"participant", &lottery.index.to_be_bytes(), &index.to_be_bytes()], ctx.program_id);
             // msg!("Index = {}, bump={}, pda = {}", index, bump, expected_pda);
             participant_list.push(expected_pda)
         }
-        let winning_index:usize = participant_list.len()/2;
-        let choosen_winner_participant:Pubkey = participant_list[winning_index]; // TODO: generate it randomly
+
+        // let winning_index:usize = participant_list.len()/2; // OnChain old logic
+        let winning_index = offchain_random_index as usize; // off chain logic
+        let choosen_winner_participant:Pubkey = participant_list[winning_index]; 
 
         msg!("Winner is {}", choosen_winner_participant);
         lottery.winner = choosen_winner_participant;

@@ -195,7 +195,7 @@ describe("lottery_program", () => {
     )
     await getBalance("lottery before", lottery_pda);
     await getBalance("jonny before", user_jonny.publicKey);
-    let tx = await program.methods.finalizeWinner()
+    let tx = await program.methods.finalizeWinner(new anchor.BN(0))
       .accounts({
         programState: account_state_pda,
         lottery: lottery_pda,
