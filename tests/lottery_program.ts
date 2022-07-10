@@ -128,33 +128,33 @@ describe("lottery_program", () => {
     await getBalance("lottery after", lottery_pda);
     await getBalance("jonny after", user_jonny.publicKey);
   });
-  // it("Take part in lottery Again!", async () => {
-  //   let [lottery_pda] = await anchor.web3.PublicKey.findProgramAddress(
-  //     [utf8.encode("lottery"), new anchor.BN(0).toBuffer('be', 8)],
-  //     program.programId
-  //   )
-  //   let lottery_data = await program.account.lottery.fetch(lottery_pda);
+  it("Take part in lottery Again!", async () => {
+    let [lottery_pda] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("lottery"), new anchor.BN(0).toBuffer('be', 8)],
+      program.programId
+    )
+    let lottery_data = await program.account.lottery.fetch(lottery_pda);
 
-  //   let [participant_pda] = await anchor.web3.PublicKey.findProgramAddress(
-  //     [utf8.encode("participant"), lottery_data.index.toBuffer('be', 8), lottery_data.participantCount.toBuffer('be', 8)],
-  //     program.programId
-  //   )
-  //   console.log("participant pda 2 =", participant_pda)
-  //   // create a unauthorised user
+    let [participant_pda] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("participant"), lottery_data.index.toBuffer('be', 8), lottery_data.participantCount.toBuffer('be', 8)],
+      program.programId
+    )
+    console.log("participant pda 2 =", participant_pda)
+    // create a unauthorised user
 
-  //   await fundAccount(user_jonny);
+    await fundAccount(user_jonny);
 
-  //   const tx = await program.methods.createParticipant()
-  //     .accounts({
-  //       lottery: lottery_pda,
-  //       participant: participant_pda,
-  //       user: user_jonny.publicKey
-  //     })
-  //     .signers([user_jonny])
-  //     .rpc()
+    const tx = await program.methods.createParticipant()
+      .accounts({
+        lottery: lottery_pda,
+        participant: participant_pda,
+        user: user_jonny.publicKey
+      })
+      .signers([user_jonny])
+      .rpc()
 
-  //   console.log("Your participation transaction signature=", tx);
-  // });
+    console.log("Your participation transaction signature=", tx);
+  });
 
   // it("Jonny take part in again in same lottery!", async () => {
   //   let [lottery_pda] = await anchor.web3.PublicKey.findProgramAddress(
@@ -239,6 +239,38 @@ describe("lottery_program", () => {
     console.log("Lottery Data", lottery_data)
     await getBalance("lottery after winner", lottery_pda);
     await getBalance("jonny after winner", user_jonny.publicKey);
+  });
+
+  it("Fail: Take part in completed lottery!", async () => {
+    let [lottery_pda] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("lottery"), new anchor.BN(0).toBuffer('be', 8)],
+      program.programId
+    )
+    let lottery_data = await program.account.lottery.fetch(lottery_pda);
+
+    let [participant_pda] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("participant"), lottery_data.index.toBuffer('be', 8), lottery_data.participantCount.toBuffer('be', 8)],
+      program.programId
+    )
+    console.log("participant pda 1 =", participant_pda.toString())
+    // create a unauthorised user
+
+    await fundAccount(user_jonny);
+      try{
+        const tx = await program.methods.createParticipant()
+        .accounts({
+          lottery: lottery_pda,
+          participant: participant_pda,
+          user: user_jonny.publicKey
+        })
+        .signers([user_jonny])
+        .rpc()
+        assert(false, "tx should have failed")
+      }catch{
+        assert(true)
+      }
+    
+
   });
 });
 

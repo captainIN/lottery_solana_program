@@ -46,12 +46,15 @@ pub mod lottery_program {
         // check if the user has alredy participated
         // Logic pending for this check
 
+        // Check if the lottery is active
+        require!(lottery.is_active == true, LotteryError::LotteryIsOver);
+
         let ix = transfer(&user.key, &lottery.key(), lottery.entry_fee);
 
         invoke(&ix, &[
             user.to_account_info(),
             lottery.to_account_info(),
-        ]);
+        ]).ok();
 
         participant.user = *user.key;
         participant.index = lottery.participant_count;
@@ -73,11 +76,11 @@ pub mod lottery_program {
         let mut participant_list = Vec::new();
         for index in 0..lottery.participant_count {
             let (expected_pda, bump) = Pubkey::find_program_address(&[b"participant", &lottery.index.to_be_bytes(), &index.to_be_bytes()], ctx.program_id);
-            msg!("Index = {}, bump={}, pda = {}", index, bump, expected_pda);
+            // msg!("Index = {}, bump={}, pda = {}", index, bump, expected_pda);
             participant_list.push(expected_pda)
         }
-        
-        let choosen_winner_participant:Pubkey = participant_list[0]; // TODO: generate it randomly
+        let winning_index:usize = participant_list.len()/2;
+        let choosen_winner_participant:Pubkey = participant_list[winning_index]; // TODO: generate it randomly
 
         msg!("Winner is {}", choosen_winner_participant);
         lottery.winner = choosen_winner_participant;
@@ -266,6 +269,9 @@ pub enum LotteryError {
 
     #[msg("Claim Failed! Lottery reward is already claimed.")]
     RewardAlreadyClaimed,
+
+    #[msg("Lottery Inactive. This lottery is over.")]
+    LotteryIsOver,
 
     #[msg("Claim Failed! Insufficiant funds.")]
     InsufficientFundsForTransaction,
